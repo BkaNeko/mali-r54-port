@@ -1,11 +1,41 @@
 # 二进制组件
 
-移植所需的全部二进制件。放进镜像前请核对 md5。
+移植所需的全部二进制件。**目录结构就是设备上的分区结构**，可以直接覆盖：
+`blobs/vendor/` 对应 `/vendor`，`blobs/vendor_dlkm/` 对应 `/vendor_dlkm`。
 
 许可提醒：这些是 ARM 和 MediaTek 的专有二进制，不适用本仓库的 GPL/MIT 许可，
 详见 [LICENSES.md](../../LICENSES.md)。
 
-## vendor.img（19 个）
+## 布局
+
+```
+blobs/
+├── vendor/                                   → /vendor
+│   ├── etc/
+│   │   ├── mali_platform.config  @           → /vendor/etc/
+│   │   └── permissions/
+│   │       ├── android.hardware.vulkan.version.xml  @
+│   │       └── android.software.vulkan.deqp.level.xml  @
+│   ├── firmware/
+│   │   └── mali_csffw.bin  @                 → /vendor/firmware/（reload 副本由同一份派生）
+│   └── lib64/
+│       ├── egl/{libGLES_mali.so, libGLES_meow.so, libMEOW_*.so}
+│       ├── mt6895/{arm.mali.platform-V2-ndk.so, arm.graphics-V5-ndk.so,
+│       │           libarm_mali_config_sysprops.so,
+│       │           libarm_{egl,gralloc}_properties_sysprop.so}
+│       ├── libc++.so  libged.so  libgpud.so  libmtk_mali_user.so
+│       └── android.hardware.{graphics.common-V6,graphics.allocator-V2,common-V2}-ndk.so
+└── vendor_dlkm/                              → /vendor_dlkm
+    └── lib/modules/*.ko
+```
+
+`@` 标记的是**符号链接**，指向仓库里的单一事实源（`../firmware/`、`../files/`），
+避免同一份固件/配置在仓库里存两份。`cp -a` / `rsync -a` 默认会跟随之，
+若用 `tar` 或 `mkfs.erofs` 打包请确认加了 follow 选项（或直接拷贝解引用后的树）。
+`files/vendor-build.prop.*-r54` 是**属性片段**，要追加进目标 ROM 的
+`vendor/build.prop`，不是整份文件覆盖，因此不在这棵树里。
+
+## vendor.img（19 个真实文件 + 4 个链接）
 
 **替换的 r54 用户态库（10 个）** —— 底包里原有的同名文件，直接覆盖：
 
@@ -36,6 +66,15 @@
 | `/vendor/lib64/mt6895/libarm_egl_properties_sysprop.so` | 35,696 | `9ddbe1e5a34c` | 同上，EGL 侧 |
 | `/vendor/lib64/mt6895/libarm_gralloc_properties_sysprop.so` | 35,672 | `41346913f1a9` | 同上，gralloc 侧；AFRC/AFBC usage 位配置链 |
 
+**非库文件（4 个，仓库内为符号链接）**：
+
+| 目标路径 | 来源 | 说明 |
+|---|---|---|
+| `/vendor/firmware/mali_csffw.bin` | `firmware/mali_csffw.bin` | UK 1.38；`mali_csffw_reload.bin` 由同一份派生，两者必须同版本 |
+| `/vendor/etc/mali_platform.config` | `files/mali_platform.config` | sepolicy 已预期其存在 |
+| `/vendor/etc/permissions/android.hardware.vulkan.version.xml` | `files/…` | version=4206592（1.3.0） |
+| `/vendor/etc/permissions/android.software.vulkan.deqp.level.xml` | `files/…` | version=132711169（2025-03-01） |
+
 > 可用 `readelf -d` 对照 r54 各库的 `NEEDED` 逐个确认目标 ROM 里是否已有，
 > 已有则不必新增（但版本要兼容）。
 
@@ -51,6 +90,9 @@
 | `/vendor_dlkm/lib/modules/mali_mgm.ko` | 28,704 | `45833415252c` | |
 | `/vendor_dlkm/lib/modules/mali_prot_alloc.ko` | 24,240 | `3580df6a568f` | |
 
+`modules.load` / `modules.dep` 需要在目标 ROM 上**就地追加**这 7 个条目
+（不是文件覆盖），见 `docs/PORTING.zh-CN.md` 第 4 节。
+
 > 换模块**必须做全量 `__crc_` 比对**，`lsmod` 显示已加载不代表能用，见
 > [../README.md](../README.md) 的同名小节。
 
@@ -62,28 +104,26 @@ sudo mount -o loop,ro vendor.img /mnt/v
 sudo cp -a --preserve=all /mnt/v/. work_vendor/
 sudo umount /mnt/v
 
-# 覆盖
-sudo cp -a blobs/vendor/. work_vendor/
+# 整棵覆盖（含 firmware / etc / permissions；-L 解引用符号链接）
+sudo cp -aL blobs/vendor/. work_vendor/
 sudo chown -R 0:0 work_vendor
 sudo chmod 644 work_vendor/lib64/egl/mt6895/libGLES_mali.so
 ```
 
-`vendor_dlkm` 同理：把 `blobs/vendor_dlkm/*.ko` 拷到
-`work_vendor_dlkm/lib/modules/`，权限 `644`，标签 `u:object_r:vendor_file:s0`。
+`vendor_dlkm` 同理：`sudo cp -aL blobs/vendor_dlkm/. work_vendor_dlkm/`，
+权限 `644`，标签 `u:object_r:vendor_file:s0`。
 
 标签必须按 `docs/PORTING.zh-CN.md` 第 3.7 节用原版镜像逐文件对齐，
 尤其是 `libGLES_mali.so` 和 `mali_csffw.bin` 必须是 `same_process_hal_file`。
-本次新增的 `libc++.so` 与两个 `android.hardware.*-ndk.so` 走 **`vendor_file`**，
+新加的 `libc++.so` 与两个 `android.hardware.*-ndk.so` 走 **`vendor_file`**，
 `libarm_*_properties_sysprop.so` 与 `libged.so` / `libgpud.so` 走 **`same_process_hal_file`**。
 
-## 不在这里的
+## 不在这棵树里的
 
-| 文件 | 位置 |
-|---|---|
-| `mali_csffw.bin`（UK 1.38） | [../firmware/](../firmware/) |
-| `gpueb` 固件（原厂 / 950MHz） | [../firmware/](../firmware/) |
-| `build.prop` 的 44 条 EGL 属性 | [../files/vendor-build.prop.egl-r54](../files/) |
-| `build.prop` 的 12 条 gralloc 属性 | [../files/vendor-build.prop.gralloc-r54](../files/) |
-| `mali_platform.config` | [../files/mali_platform.config](../files/) |
-| `init.insmod.mt6895.cfg` | [../files/init.insmod.mt6895.cfg](../files/) |
-| Vulkan 声明 XML | [../files/](../files/) |
+| 文件 | 位置 | 为什么 |
+|---|---|---|
+| `gpueb` 固件（原厂 / 950MHz） | [../firmware/](../firmware/) | 落在 **gpueb 物理分区**，不是 vendor |
+| `build.prop` 的 44 条 EGL 属性 | [../files/vendor-build.prop.egl-r54](../files/) | 追加进目标 ROM 的 `vendor/build.prop` |
+| `build.prop` 的 12 条 gralloc 属性 | [../files/vendor-build.prop.gralloc-r54](../files/) | 同上 |
+| `init.insmod.mt6895.cfg` | [../files/init.insmod.mt6895.cfg](../files/) | 修改目标 ROM 的 `/vendor/etc/` 版本 |
+| `modules.load` / `modules.dep` 条目 | 无文件 | 就地追加，见 PORTING 第 4 节 |

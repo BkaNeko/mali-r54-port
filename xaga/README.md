@@ -53,9 +53,10 @@ mali_csffw.bin    (firmware)   ─┘
 ## 目录结构（本目录 `xaga/`）
 
 ```
-blobs/
-  vendor/                          Mali r54 用户态库（19 个，51.7MB 主库）
-  vendor_dlkm/                     r54 / GED / GPUEB 内核模块（7 个）
+blobs/                             按分区路径镜像，可直接覆盖
+  vendor/                          → /vendor：lib64/（19 个库，51.7MB 主库）
+  vendor/etc, vendor/firmware      → 指向 files/ 与 firmware/ 的符号链接
+  vendor_dlkm/lib/modules/         → /vendor_dlkm：7 个内核模块
   README.md                        完整清单与 md5
 files/
   vendor-build.prop.egl-r54        44 条 ro.vendor.arm.egl.configs.* 属性

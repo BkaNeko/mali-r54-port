@@ -247,7 +247,7 @@ AVB 不处理：底包本身以 `--disable-verity` 刷入、vbmeta 校验值早�
 
 | 环节 | 在哪 | 做什么 |
 |---|---|---|
-| 重编 kbase | 本仓库 `tools/build-mali-ko.sh` | 用 `KDIR` 指的内核树编 `mali_kbase_mt6895.ko`：补 `-DCONFIG_MALI_MTK_PROC_FS/-DCONFIG_MALI_MTK_MEMTRACK`、`KBUILD_MODPOST_WARN=1`、`-Wno-error=*`，最后 `llvm-strip --strip-debug`（46 MB → 2.57 MB）。产物放进 `blobs/vendor_dlkm/` |
+| 重编 kbase | 本仓库 `tools/build-mali-ko.sh` | 用 `KDIR` 指的内核树编 `mali_kbase_mt6895.ko`：补 `-DCONFIG_MALI_MTK_PROC_FS/-DCONFIG_MALI_MTK_MEMTRACK`、`KBUILD_MODPOST_WARN=1`、`-Wno-error=*`，最后 `llvm-strip --strip-debug`（46 MB → 2.57 MB）。产物放进 `blobs/vendor_dlkm/lib/modules/` |
 | 打可刷镜像 | ROM 工程里的 `scripts/mali_r54_port.py` | 解底包 super → 注入 payload → 重建 vendor/vendor_dlkm → 重打 super；顺带做 `.ko` 的 vermagic 改写、`cancel_work → cancel_work_sync` 符号改指、`large_page_conf` 加载参数、把 kbase 从 `modules.load` 摘除、属性改标签等 |
 | 验收 | 本文第 7 节 | 设备端逐项核对 |
 

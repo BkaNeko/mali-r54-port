@@ -989,7 +989,7 @@ GPU 帧间掉电触发钩子 → 频率被砸回 350 → EB 重新拉上 950 →
 
 ### 12.4 产物与部署
 
-- `blobs/vendor_dlkm/`：mali_kbase（撤钩子版）、ged（force_fdvfs 版）、
+- `blobs/vendor_dlkm/lib/modules/`：mali_kbase（撤钩子版）、ged（force_fdvfs 版）、
   mtk_gpufreq_mt6895/wrapper（带 fix 导出的重编版，原厂同名 1:1 替换）
 - xaga 侧经 new-port 流水线重打 vendor_dlkm 后 dd 部署，实机验证：
   空载 350、负载 950、中间档随负载浮动、停载回落
