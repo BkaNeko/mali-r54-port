@@ -215,7 +215,7 @@ DVFSState 0x0002
 
 ### 4.4 完整技术文档
 
-https://github.com/BkaNeko/xaga-mali-r54-port/blob/master/docs/DVFS-FIX.zh-CN.md
+https://github.com/BkaNeko/mali-r54-port/blob/master/docs/DVFS-FIX.zh-CN.md
 
 附录 A~G，包含：状态机推导、打包踩坑、实机验证、TARGET_GPU/880 互斥、固件自主 governor 实证、自建调度失败。
 
@@ -261,7 +261,7 @@ cat /proc/gpufreqv2/gpufreq_status | grep -E "GPU-OPP|GPU-REALOPP|STACK-OPP|DVFS
 ```
 
 `glbench` 已推到 `/data/local/tmp/glbench`。源码在
-`/home/bkaneko/projects/xaga-mali-r54-port/tools/glbench.c`，编译：
+`/home/bkaneko/projects/mali-r54-port/tools/glbench.c`，编译：
 
 ```bash
 $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-cpp \

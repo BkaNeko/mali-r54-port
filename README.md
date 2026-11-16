@@ -1,4 +1,4 @@
-# xaga-mali-r54-port
+# mali-r54-port
 
 把 MediaTek **Mali-G610 (MT6895)** 的 GPU 内核驱动从原厂 **r32p1** 升级到 **r54p1**，
 并配套把 **GED** 和 **gpueb** 从 6.12 源码 backport 到 Linux 5.10 的完整记录。
