@@ -1,6 +1,6 @@
 # Mali r54p1 on qqcandy (ossi / MT6895)
 
-把 13T（mt6895）的 Mali r54p1 GPU 栈搬到 **qqcandy**。和 xaga 移植（仓库根目录）是同一套 DDK，
+把 13T（mt6895）的 Mali r54p1 GPU 栈搬到 **qqcandy**。和 [`xaga/`](../xaga/README.md) 的移植是同一套 DDK，
 但**落盘方式完全不同**：这台机器的内核在 `early-init` 就加载 GPU 模块，而且
 OPPO 的内核安全驱动禁止任何非 recovery 进程写受保护分区，所以内核模块必须写真分区，
 用户态则用 KernelSU 元模块做 systemless overlay。
@@ -30,14 +30,14 @@ ro.vendor.arm.gralloc.*         12 条生效
 ### 1. 用户态 —— KernelSU 元模块（systemless）
 
 `magic_mount_rs` 元模块在 `post-fs-data` 把 r54 的用户态文件 bind 到 `/vendor` 上，
-不碰分区。模块内容见 `scripts/build_ksu_module.sh`（它从仓库根目录的 `blobs/` 取 10 个 r54 库，
+不碰分区。模块内容见 `scripts/build_ksu_module.sh`（它从 `xaga/blobs/` 取 10 个 r54 库，
 再叠加本目录 `blobs/vendor_extra/` 里 qqcandy 特有的 5 个文件）。
 
 属性**不能**走 overlay 的 `vendor/build.prop`：properties 在 `early-init` 就读完了，
 比 `post-fs-data` 早。属性必须放模块的 `system.prop`（KernelSU 在 `post-fs-data` 用 resetprop 加载）。
 
 需要的文件：
-- 10 个 r54 用户态库（仓库根目录 `blobs/vendor/`）
+- 10 个 r54 用户态库（[`xaga/blobs/vendor/`](../xaga/blobs/vendor/)）
 - `blobs/vendor_extra/libc++.so` —— 底包 VNDK libc++ 缺 `__libcpp_verbose_abort`
 - `blobs/vendor_extra/android.hardware.graphics.{common-V6,allocator-V2}-ndk.so`
   + `android.hardware.common-V2-ndk.so` —— libgpud 的新依赖，sphal 命名空间看不到 /system
@@ -47,7 +47,7 @@ ro.vendor.arm.gralloc.*         12 条生效
 
 ### 2. 内核态 —— 必须写真分区
 
-`scripts/build_dlkm_image.py` 用底包 `vendor_dlkm.img` + `blobs/vendor_dlkm/` 里的 3 个 r54 模块
+`scripts/build_dlkm_image.py` 用底包 `vendor_dlkm.img` + 本目录 `blobs/vendor_dlkm/` 里的 3 个 r54 模块
 生成新镜像，再用 `scripts/make_recovery_zip.py` 包成 recovery 刷机包。
 
 **`ged.ko` / `gpueb.ko` 保持原厂**，原因见 `docs/PITFALLS.zh-CN.md` 第 3 条。
@@ -85,7 +85,7 @@ payload 一个字节都不能动，改了 GPUEB 协处理器就起不来、整�
 
 ```
 qqcandy/
-├── README.zh-CN.md
+├── README.md
 ├── docs/
 │   ├── PORTING.zh-CN.md      操作步骤
 │   └── PITFALLS.zh-CN.md     六个坑，含现象和判断方法

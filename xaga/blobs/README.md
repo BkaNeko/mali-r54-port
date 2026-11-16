@@ -3,7 +3,7 @@
 移植所需的全部二进制件。放进镜像前请核对 md5。
 
 许可提醒：这些是 ARM 和 MediaTek 的专有二进制，不适用本仓库的 GPL/MIT 许可，
-详见 [../LICENSES.md](../LICENSES.md)。
+详见 [LICENSES.md](../../LICENSES.md)。
 
 ## vendor.img（13 个）
 

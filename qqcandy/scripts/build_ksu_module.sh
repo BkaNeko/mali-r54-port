@@ -4,6 +4,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 QROOT="$(cd "$HERE/.." && pwd)"          # qqcandy/
 REPO="$(cd "$QROOT/.." && pwd)"          # 仓库根
+XROOT="$REPO/xaga"                        # 共用资源（10 个 r54 库 / 固件 / files）
 OUT="${1:-$QROOT/r54_mali.tar.gz}"
 BUILD="$(mktemp -d)"
 trap 'rm -rf "$BUILD"' EXIT
@@ -14,7 +15,7 @@ mkdir -p "$M/system/vendor/lib64/egl/mt6895" \
          "$M/system/vendor/firmware" \
          "$M/system/vendor/etc/permissions"
 
-# --- r54 包里的 10 个用户态库（仓库根 blobs/vendor）---
+# --- r54 包里的 10 个用户态库（xaga/blobs/vendor）---
 for f in lib64/egl/mt6895/libGLES_mali.so \
          lib64/egl/libGLES_meow.so \
          lib64/egl/libMEOW_gift.so lib64/egl/libMEOW_trace.so lib64/egl/libMEOW_qt.so \
@@ -25,7 +26,7 @@ for f in lib64/egl/mt6895/libGLES_mali.so \
          lib64/mt6895/libarm_gralloc_properties_sysprop.so \
          lib64/mt6895/libarm_egl_properties_sysprop.so \
          lib64/mt6895/arm.graphics-V5-ndk.so; do
-    src="$REPO/blobs/vendor/$f"
+    src="$XROOT/blobs/vendor/$f"
     [ -f "$src" ] || { echo "缺 $src" >&2; exit 1; }
     cp "$src" "$M/system/vendor/$f"
 done
@@ -40,14 +41,14 @@ done
 # libged.so 已在 blobs/vendor_extra 里改好 atrace 符号（大小不变）
 
 # --- 固件 UK 1.38（两份必须都是）---
-cp "$REPO/firmware/mali_csffw.bin" "$M/system/vendor/firmware/mali_csffw.bin"
-cp "$REPO/firmware/mali_csffw.bin" "$M/system/vendor/firmware/mali_csffw_reload.bin"
+cp "$XROOT/firmware/mali_csffw.bin" "$M/system/vendor/firmware/mali_csffw.bin"
+cp "$XROOT/firmware/mali_csffw.bin" "$M/system/vendor/firmware/mali_csffw_reload.bin"
 
 # --- 平台配置 / Vulkan 声明 ---
-cp "$REPO/files/mali_platform.config" "$M/system/vendor/etc/mali_platform.config"
-cp "$REPO/files/android.hardware.vulkan.version.xml" \
+cp "$XROOT/files/mali_platform.config" "$M/system/vendor/etc/mali_platform.config"
+cp "$XROOT/files/android.hardware.vulkan.version.xml" \
    "$M/system/vendor/etc/permissions/android.hardware.vulkan.version.xml"
-cp "$REPO/files/android.software.vulkan.deqp.level.xml" \
+cp "$XROOT/files/android.software.vulkan.deqp.level.xml" \
    "$M/system/vendor/etc/permissions/android.software.vulkan.deqp.level.xml"
 
 # --- 模块元信息 + 属性 ---

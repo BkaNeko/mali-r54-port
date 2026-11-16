@@ -32,7 +32,7 @@ adb shell 'stat -c "%s %n" /vendor/lib64/egl/mt6895/libGLES_mali.so \
 bash scripts/build_ksu_module.sh          # 输出 r54_mali.zip
 ```
 
-脚本做的事：把仓库根 `blobs/vendor/` 的 10 个 r54 库 +
+脚本做的事：把 `xaga/blobs/vendor/` 的 10 个 r54 库 +
 本目录 `blobs/vendor_extra/` 的 5 个补充文件，按下面的布局放进模块：
 
 ```

@@ -298,7 +298,7 @@ adb shell 'su -c "
 adb shell 'su -c "dmesg | grep -c \"GDBG commit\""'
 ```
 
-`glbench` 源码在 `mali-r54-port/tools/glbench.c`，编法：
+`glbench` 源码在 `xaga/tools/glbench.c`，编法：
 
 ```bash
 $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang \
