@@ -61,16 +61,29 @@ firmware/mali_csffw.bin                 282,624   UK 1.38
 > `libgpud.so` 不能省。r54 的 `libGLES_mali.so` 依赖
 > `gpudVkCreateAccelerationStructureKHR`，原厂 `libgpud.so`（108,808 B）没有这个符号。
 
-### 3.2 新增 ROM 里缺失的依赖（4 个）
+### 3.2 新增 ROM 里缺失的依赖（9 个）
 
 ```
-lib64/libmtk_mali_user.so                        52,128   libGLES_mali 直接 NEEDED
-lib64/android.hardware.graphics.common-V6-ndk.so 31,512   libgpud 直接 NEEDED
-lib64/mt6895/arm.mali.platform-V2-ndk.so         85,344
-lib64/mt6895/libarm_mali_config_sysprops.so      52,048
+lib64/libmtk_mali_user.so                         52,128   libGLES_mali 直接 NEEDED
+lib64/libc++.so                                1,154,016   底包 VNDK v31 缺 257 个符号（__libcpp_verbose_abort 等）
+lib64/android.hardware.graphics.common-V6-ndk.so  31,512   libgpud 直接 NEEDED
+lib64/android.hardware.graphics.allocator-V2-ndk.so 44,416  libgpud 直接 NEEDED（底包是 HIDL gralloc，没有）
+lib64/android.hardware.common-V2-ndk.so           18,856   上面 allocator-V2 的依赖（也可由 common-V6 满足）
+lib64/mt6895/arm.mali.platform-V2-ndk.so          85,344
+lib64/mt6895/arm.graphics-V5-ndk.so               35,176
+lib64/mt6895/libarm_mali_config_sysprops.so       52,048
+lib64/mt6895/libarm_egl_properties_sysprop.so     35,696
+lib64/mt6895/libarm_gralloc_properties_sysprop.so 35,672   AFRC/AFBC usage 位配置链
 ```
 
 用 `readelf -d` 核对 r54 库的 NEEDED，逐个确认在新 ROM 里存在。
+
+> `libc++.so` 有三个必须知道的约束（细节见
+> [FLASHABLE-SUPER.zh-CN.md](FLASHABLE-SUPER.zh-CN.md) 第 4 节坑 3/4/5）：
+> 必须装成 `vendor/lib64/libc++.so` 本体覆盖，**不能改名旁挂**（两份 libc++ 同进程
+> 会让 `std::locale::use_facet` 的 facet id 跨副本不匹配 → zygote64 `std::bad_cast` 卡开机）；
+> `DT_NEEDED` 名字保持不动；两个 `android.hardware.*-ndk.so` 同批补上，否则
+> `libgpud.so` 一 `dlopen` 就失败。
 
 ### 3.3 44 条 EGL 属性（关键，漏了就崩）
 
