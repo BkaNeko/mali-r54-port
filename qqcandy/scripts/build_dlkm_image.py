@@ -8,7 +8,7 @@
 做的事：
   1. 挂载底包镜像，整树复制（保留权限/xattr）
   2. 删 met*.ko（编译残留，无任何引用，腾约 1.3MB）
-  3. 用 blobs/vendor_dlkm/ 的 r54 模块替换 kbase / mgm / prot_alloc
+  3. 用 blobs/vendor_dlkm/lib/modules/ 的 r54 模块替换 kbase / mgm / prot_alloc
      —— ged.ko / gpueb.ko 不动，底包那份已经导出了 r54 kbase 需要的全部 ged_dvfs_* 符号
   4. 所有文件打 u:object_r:vendor_file:s0
   5. mke2fs 整树重建（分区上限大小，inode 比例放大以腾空间）
@@ -31,7 +31,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stock-vendor-dlkm", required=True)
     ap.add_argument("--out", default="vendor_dlkm_new.img")
-    ap.add_argument("--metadir", default=str(QROOT / "blobs" / "vendor_dlkm"))
+    ap.add_argument("--metadir", default=str(QROOT / "blobs" / "vendor_dlkm" / "lib" / "modules"))
     a = ap.parse_args()
 
     if os.geteuid() != 0:

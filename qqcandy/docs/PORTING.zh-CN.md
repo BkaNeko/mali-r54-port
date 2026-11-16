@@ -33,7 +33,7 @@ bash scripts/build_ksu_module.sh          # 输出 r54_mali.zip
 ```
 
 脚本做的事：把 `xaga/blobs/vendor/` 的 10 个 r54 库 +
-本目录 `blobs/vendor_extra/` 的 5 个补充文件，按下面的布局放进模块：
+本目录 `blobs/vendor/lib64/` 的 5 个补充文件，按下面的布局放进模块：
 
 ```
 r54_mali/
@@ -43,7 +43,7 @@ r54_mali/
     ├── lib64/egl/mt6895/libGLES_mali.so
     ├── lib64/egl/libGLES_meow.so
     ├── lib64/egl/libMEOW_{gift,trace,qt,data,mfrc_ext}.so
-    ├── lib64/libged.so             ← blobs/vendor_extra/libged.so（已改 atrace 符号）
+    ├── lib64/libged.so             ← blobs/vendor/lib64/libged.so（已改 atrace 符号）
     ├── lib64/libgpud.so
     ├── lib64/libmtk_mali_user.so
     ├── lib64/libc++.so             ← 新增
@@ -113,7 +113,7 @@ python3 scripts/build_dlkm_image.py \
 1. 挂载底包 `vendor_dlkm.img`，整树复制出来
 2. 删掉 `met*.ko`（`modules.list` 里没有、任何 init rc 也没 insmod、全 vendor 无引用，
    属于编译残留，腾出 ~1.3 MB）
-3. 用 `blobs/vendor_dlkm/` 的 3 个 r54 模块替换同名文件，**`ged.ko` / `gpueb.ko` 不动**
+3. 用 `blobs/vendor_dlkm/lib/modules/` 的 3 个 r54 模块替换同名文件，**`ged.ko` / `gpueb.ko` 不动**
 4. 全部文件打 `u:object_r:vendor_file:s0`
 5. `mke2fs -t ext4 -b 4096 -I 256 -i 131072 -O ^has_journal,^metadata_csum,^64bit,^resize_inode
    -d <tree> <out> 14258`

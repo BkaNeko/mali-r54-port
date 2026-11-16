@@ -168,7 +168,7 @@ r54 的库是用新版 NDK 编的，需要 `__libcpp_verbose_abort` 等新符号
 **结论**
 
 把 r54 包里的 `libc++.so` 放进 `/vendor/lib64/`（sphal 命名空间会优先命中 /vendor）。
-`blobs/vendor_extra/libc++.so` 就是这份。
+`blobs/vendor/lib64/libc++.so` 就是这份。
 
 同一轮还要补 `libgpud.so` 的两个新依赖 —— 它们**虽然 /system/lib64 里有，
 但 vendor 命名空间看不到**：

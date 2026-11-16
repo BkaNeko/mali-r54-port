@@ -31,14 +31,14 @@ for f in lib64/egl/mt6895/libGLES_mali.so \
     cp "$src" "$M/system/vendor/$f"
 done
 
-# --- qqcandy 特有的 5 个（blobs/vendor_extra）---
+# --- qqcandy 特有的 5 个（blobs/vendor/lib64）---
 for f in libc++.so libged.so \
          android.hardware.graphics.common-V6-ndk.so \
          android.hardware.graphics.allocator-V2-ndk.so \
          android.hardware.common-V2-ndk.so; do
-    cp "$QROOT/blobs/vendor_extra/$f" "$M/system/vendor/lib64/$f"
+    cp "$QROOT/blobs/vendor/lib64/$f" "$M/system/vendor/lib64/$f"
 done
-# libged.so 已在 blobs/vendor_extra 里改好 atrace 符号（大小不变）
+# libged.so 已在 blobs/vendor/lib64 里改好 atrace 符号（大小不变；.orig.so 是改前备份）
 
 # --- 固件 UK 1.38（两份必须都是）---
 cp "$XROOT/firmware/mali_csffw.bin" "$M/system/vendor/firmware/mali_csffw.bin"

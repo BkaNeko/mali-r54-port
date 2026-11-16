@@ -31,23 +31,23 @@ ro.vendor.arm.gralloc.*         12 条生效
 
 `magic_mount_rs` 元模块在 `post-fs-data` 把 r54 的用户态文件 bind 到 `/vendor` 上，
 不碰分区。模块内容见 `scripts/build_ksu_module.sh`（它从 `xaga/blobs/` 取 10 个 r54 库，
-再叠加本目录 `blobs/vendor_extra/` 里 qqcandy 特有的 5 个文件）。
+再叠加本目录 `blobs/vendor/lib64/` 里 qqcandy 特有的 5 个文件）。
 
 属性**不能**走 overlay 的 `vendor/build.prop`：properties 在 `early-init` 就读完了，
 比 `post-fs-data` 早。属性必须放模块的 `system.prop`（KernelSU 在 `post-fs-data` 用 resetprop 加载）。
 
 需要的文件：
 - 10 个 r54 用户态库（[`xaga/blobs/vendor/`](../xaga/blobs/vendor/)）
-- `blobs/vendor_extra/libc++.so` —— 底包 VNDK libc++ 缺 `__libcpp_verbose_abort`
-- `blobs/vendor_extra/android.hardware.graphics.{common-V6,allocator-V2}-ndk.so`
+- `blobs/vendor/lib64/libc++.so` —— 底包 VNDK libc++ 缺 `__libcpp_verbose_abort`
+- `blobs/vendor/lib64/android.hardware.graphics.{common-V6,allocator-V2}-ndk.so`
   + `android.hardware.common-V2-ndk.so` —— libgpud 的新依赖，sphal 命名空间看不到 /system
-- `blobs/vendor_extra/libged.so` —— r54 libged 引用了老 libcutils 没有的
+- `blobs/vendor/lib64/libged.so` —— r54 libged 引用了老 libcutils 没有的
   `atrace_async_for_track_*_body`，已等长改指 `atrace_begin_body`/`atrace_end_body`
 - `files/system.prop` —— 44 条 EGL + 12 条 gralloc
 
 ### 2. 内核态 —— 必须写真分区
 
-`scripts/build_dlkm_image.py` 用底包 `vendor_dlkm.img` + 本目录 `blobs/vendor_dlkm/` 里的 3 个 r54 模块
+`scripts/build_dlkm_image.py` 用底包 `vendor_dlkm.img` + 本目录 `blobs/vendor_dlkm/lib/modules/` 里的 3 个 r54 模块
 生成新镜像，再用 `scripts/make_recovery_zip.py` 包成 recovery 刷机包。
 
 **`ged.ko` / `gpueb.ko` 保持原厂**，原因见 `docs/PITFALLS.zh-CN.md` 第 3 条。
@@ -93,10 +93,11 @@ qqcandy/
 │   ├── system.prop           44 EGL + 12 gralloc 属性
 │   ├── module.prop           KSU 模块描述
 │   └── magic_mount.config.toml
-├── blobs/
-│   ├── vendor_dlkm/          r54 的 3 个内核模块
-│   ├── vendor_extra/         qqcandy 特有的 5 个用户态文件
-│   └── gpueb_stock_restore.img
+├── blobs/                    按分区路径镜像
+│   ├── vendor/lib64/         qqcandy 特有的用户态文件（+ libged.orig.so 备份）
+│   ├── vendor_dlkm/lib/modules/  r54 的 3 个内核模块
+│   ├── gpueb_stock_restore.img   gpueb 物理分区回滚镜像
+│   └── README.md             清单与说明
 └── scripts/
     ├── build_ksu_module.sh
     ├── build_dlkm_image.py
